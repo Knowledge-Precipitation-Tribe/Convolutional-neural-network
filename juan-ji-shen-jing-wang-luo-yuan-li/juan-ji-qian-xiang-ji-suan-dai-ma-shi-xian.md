@@ -18,7 +18,7 @@ class ConvWeightsBias(WeightsBias_2_1):
         ...
 ```
 
-![&#x56FE;17-19 &#x5377;&#x79EF;&#x6838;&#x7684;&#x7EC4;&#x6210;](../.gitbook/assets/image%20%2810%29.png)
+![&#x56FE;17-19 &#x5377;&#x79EF;&#x6838;&#x7684;&#x7EC4;&#x6210;](../.gitbook/assets/image%20%2826%29.png)
 
 以图17-19为例，各个维度的数值如下：
 
@@ -159,7 +159,7 @@ np.allclose方法逐元素检查两种方法的返回值的差异，如果绝对
 
 我们观察一下图17-20。
 
-![&#x56FE;17-20 &#x628A;&#x5377;&#x79EF;&#x8FD0;&#x7B97;&#x8F6C;&#x6362;&#x6210;&#x77E9;&#x9635;&#x8FD0;&#x7B97;](../.gitbook/assets/image%20%2814%29.png)
+![&#x56FE;17-20 &#x628A;&#x5377;&#x79EF;&#x8FD0;&#x7B97;&#x8F6C;&#x6362;&#x6210;&#x77E9;&#x9635;&#x8FD0;&#x7B97;](../.gitbook/assets/image%20%2835%29.png)
 
 先看上半部分：绿色的3x3矩阵为输入，经过棕色的卷积核运算后，得到右侧的2x2的矩阵。
 
@@ -374,5 +374,5 @@ numba方法会比im2col方法快3秒，目前看来numba方法稍占优势。但
 * test\_4d\_im2col，比较两种方法的结果，从而验证正确性
 * test\_performance，比较两种方法的性能
 
-个人代码：
+个人代码：[**Img2Col\_Test**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Img2Col_Test.py)\*\*\*\*
 
