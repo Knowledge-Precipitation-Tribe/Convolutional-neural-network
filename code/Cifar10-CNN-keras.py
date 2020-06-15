@@ -119,7 +119,7 @@ def load_model(path):
 
 
 if __name__ == "__main__":
-    x_train, y_train = load_train_data('data')
+    x_train, y_train = load_train_data('../data/cifar')
     x_train, y_train = process_train_data(x_train, y_train)
     model_path = "cifar/cifar_model_cnn.h5"
     if os.path.exists(model_path):
