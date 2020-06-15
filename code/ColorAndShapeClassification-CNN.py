@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from MiniFramework.NeuralNet_4_2 import *
 from ExtendedDataReader.GeometryDataReader import *
 
-train_data_name = "../../data/ch17.train_shape_color.npz"
-test_data_name = "../../data/ch17.test_shape_color.npz"
+train_data_name = "../data/ch17.train_shape_color.npz"
+test_data_name = "../data/ch17.test_shape_color.npz"
 
 name = ["red-circle", "red-rect", "red-tri", "green-circle", "green-rect", "green-tri", "blue-circle", "blue-rect",
         "blue-tri", ]
@@ -88,7 +88,7 @@ def show_samples(x, y, title):
 def show_result(x, y,y_raw, title):
     fig, ax = plt.subplots(nrows=6, ncols=6, figsize=(9, 9))
     for i in range(36):
-        ax[i // 6, i % 6].imshow(x[i, 0])
+        ax[i // 6, i % 6].imshow(x[i, 0].transpose(1, 2, 0))
         if np.argmax(y[i]) == np.argmax([y_raw[i]]):
             ax[i // 6, i % 6].set_title(name[np.argmax(y[i])])
         else:
