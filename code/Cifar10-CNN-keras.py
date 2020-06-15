@@ -113,11 +113,6 @@ def load_test_data(data_path):
     return x_test
 
 
-def load_model(path):
-    model = load_model(path)
-    return model
-
-
 if __name__ == "__main__":
     x_train, y_train = load_train_data('../data/cifar')
     x_train, y_train = process_train_data(x_train, y_train)
