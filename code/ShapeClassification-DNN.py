@@ -64,7 +64,7 @@ def show_result(x, y,y_raw, title):
     fig, ax = plt.subplots(nrows=6, ncols=6, figsize=(9, 9))
     for i in range(36):
         ax[i // 6, i % 6].imshow(x[i, 0])
-        if np.argmax(y[i]) == np.argmax[y_raw[i]]:
+        if np.argmax(y[i]) == np.argmax(y_raw[i]):
             ax[i // 6, i % 6].set_title(name[np.argmax(y[i])])
         else:
             ax[i // 6, i % 6].set_title(name[np.argmax(y[i])], fontdict={'color':'r'})
@@ -122,4 +122,5 @@ if __name__ == '__main__':
     X_test, Y_test = dataReader.GetTestSet()
     X = X_test[0:36].reshape(36, 1, 28, 28)
     Z = net.inference(X)
-    show_samples(X, Z, "dnn:predication")
+    Y = Y_test[0:36]
+    show_result(X, Z, Y, "dnn:predication")
