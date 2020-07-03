@@ -299,6 +299,288 @@ $$
 
 举例来说，从图18-20看，第一行的红色到了第五行变成了黑色，绿色变成了淡绿色，等等，是一一对应的关系。如果红色和绿色都变成了黑色，那么将分辨不出区别来。
 
+## keras实现
+
+### DNN
+
+```python
+from ExtendedDataReader.GeometryDataReader import *
+
+from keras.models import Sequential
+from keras.layers import Dense
+
+import matplotlib.pyplot as plt
+
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+train_data_name = "../data/ch17.train_color.npz"
+test_data_name = "../data/ch17.test_color.npz"
+
+name = ["red", "green", "blue", "yellow", "cyan", "pink"]
+
+def load_data(mode):
+    print("reading data...")
+    dataReader = GeometryDataReader(train_data_name, test_data_name, mode)
+    dataReader.ReadData()
+    dataReader.NormalizeX()
+    dataReader.NormalizeY(NetType.MultipleClassifier, base=0)
+    dataReader.Shuffle()
+    dataReader.GenerateValidationSet(k=10)
+    x_train, y_train = dataReader.XTrain, dataReader.YTrain
+    x_test, y_test = dataReader.XTest, dataReader.YTest
+    x_val, y_val = dataReader.XDev, dataReader.YDev
+
+    x_test_raw = dataReader.XTestRaw[0:64]
+    y_test_raw = dataReader.YTestRaw[0:64]
+
+    return x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw
+
+def build_model():
+    model = Sequential()
+    model.add(Dense(128, activation='relu', input_shape=(784, )))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(6, activation='softmax'))
+    model.compile(optimizer='Adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
+
+#画出训练过程中训练和验证的精度与损失
+def draw_train_history(history):
+    plt.figure(1)
+
+    # summarize history for accuracy
+    plt.subplot(211)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+
+    # summarize history for loss
+    plt.subplot(212)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+    plt.show()
+
+
+def show_result(x, y, y_raw):
+    x = x / 255
+    fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
+    for i in range(64):
+        ax[i // 8, i % 8].imshow(x[i].transpose(1, 2, 0))
+        if y[i, 0] == y_raw[i, 0]:
+            ax[i // 8, i % 8].set_title(name[y[i, 0]])
+        else:
+            ax[i // 8, i % 8].set_title(name[y[i, 0]], fontdict={'color':'r'})
+        ax[i // 8, i % 8].axis('off')
+    # endfor
+    plt.show()
+
+
+if __name__ == '__main__':
+    x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw = load_data('vector')
+    # print(x_train.shape)
+    # print(x_test.shape)
+    # print(x_val.shape)
+
+    model = build_model()
+    history = model.fit(x_train, y_train,
+                        epochs=20,
+                        batch_size=64,
+                        validation_data=(x_val, y_val))
+    draw_train_history(history)
+
+    loss, accuracy = model.evaluate(x_test, y_test)
+    print("test loss: {}, test accuracy: {}".format(loss, accuracy))
+
+    z = model.predict(x_test[0:64])
+    show_result(x_test_raw[0:64], np.argmax(z, axis=1).reshape(64, 1), y_test_raw[0:64])
+
+    weights = model.get_weights()
+    print("weights: ", weights)
+```
+
+#### 模型输出
+
+```python
+test loss: 0.9397198047637939, test accuracy: 0.7200000286102295
+```
+
+#### 训练损失以及准确率曲线
+
+![](../.gitbook/assets/image%20%2889%29.png)
+
+#### 模型分类结果
+
+![](../.gitbook/assets/image%20%2883%29.png)
+
+### CNN
+
+```python
+from ExtendedDataReader.GeometryDataReader import *
+
+from keras.models import Sequential
+from keras.layers import Conv2D,MaxPool2D,Flatten,Dense, BatchNormalization
+
+import matplotlib.pyplot as plt
+
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+train_data_name = "../data/ch17.train_color.npz"
+test_data_name = "../data/ch17.test_color.npz"
+
+name = ["red", "green", "blue", "yellow", "cyan", "pink"]
+
+def load_data(mode):
+    print("reading data...")
+    dataReader = GeometryDataReader(train_data_name, test_data_name, mode)
+    dataReader.ReadData()
+    dataReader.NormalizeX()
+    dataReader.NormalizeY(NetType.MultipleClassifier, base=0)
+    dataReader.Shuffle()
+    dataReader.GenerateValidationSet(k=10)
+    x_train, y_train = dataReader.XTrain, dataReader.YTrain
+    x_test, y_test = dataReader.XTest, dataReader.YTest
+    x_val, y_val = dataReader.XDev, dataReader.YDev
+
+    x_train = x_train.reshape(x_train.shape[0], 28, 28, 3)
+    x_test = x_test.reshape(x_test.shape[0], 28, 28, 3)
+    x_val = x_val.reshape(x_val.shape[0], 28, 28, 3)
+
+    x_test_raw = dataReader.XTestRaw[0:64]
+    y_test_raw = dataReader.YTestRaw[0:64]
+
+    return x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw
+
+def build_model():
+    model = Sequential()
+    model.add(Conv2D(filters=2, kernel_size=(1,1), activation='relu', input_shape=(28,28,3)))
+    model.add(MaxPool2D(pool_size=(2,2)))
+    model.add(Conv2D(filters=3, kernel_size=(3,3), activation='relu'))
+    model.add(MaxPool2D(pool_size=(2,2), strides=2))
+    model.add(Flatten())
+    model.add(Dense(32, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dense(6, activation='softmax'))
+    model.compile(optimizer='Adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
+
+#画出训练过程中训练和验证的精度与损失
+def draw_train_history(history):
+    plt.figure(1)
+
+    # summarize history for accuracy
+    plt.subplot(211)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+
+    # summarize history for loss
+    plt.subplot(212)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+    plt.show()
+
+
+def show_result(x, y, y_raw):
+    x = x / 255
+    fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
+    for i in range(64):
+        ax[i // 8, i % 8].imshow(x[i].transpose(1, 2, 0))
+        if y[i, 0] == y_raw[i, 0]:
+            ax[i // 8, i % 8].set_title(name[y[i, 0]])
+        else:
+            ax[i // 8, i % 8].set_title(name[y[i, 0]], fontdict={'color':'r'})
+        ax[i // 8, i % 8].axis('off')
+    # endfor
+    plt.show()
+
+
+if __name__ == '__main__':
+    x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw = load_data('image')
+    print(x_train.shape)
+    print(x_test.shape)
+    print(x_val.shape)
+
+    model = build_model()
+    print(model.summary())
+    model.save('color_cnn/keras-model.h5')
+    history = model.fit(x_train, y_train,
+                        epochs=20,
+                        batch_size=64,
+                        validation_data=(x_val, y_val))
+    draw_train_history(history)
+
+    loss, accuracy = model.evaluate(x_test, y_test)
+    print("test loss: {}, test accuracy: {}".format(loss, accuracy))
+
+    z = model.predict(x_test[0:64])
+    show_result(x_test_raw[0:64], np.argmax(z, axis=1).reshape(64, 1), y_test_raw[0:64])
+
+    weights = model.get_weights()
+    print("weights: ", weights)
+```
+
+#### 模型结构
+
+![](../.gitbook/assets/image%20%2884%29.png)
+
+#### 模型输出
+
+```python
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_1 (Conv2D)            (None, 28, 28, 2)         8         
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 14, 14, 2)         0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 12, 12, 3)         57        
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 6, 6, 3)           0         
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 108)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 32)                3488      
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 32)                128       
+_________________________________________________________________
+dense_2 (Dense)              (None, 6)                 198       
+=================================================================
+Total params: 3,879
+Trainable params: 3,815
+Non-trainable params: 64
+_________________________________________________________________
+
+test loss: 0.013688366492278874, test accuracy: 0.996999979019165
+```
+
+#### 训练损失以及准确率曲线
+
+![](../.gitbook/assets/image%20%2881%29.png)
+
+#### 模型分类结果
+
+![](../.gitbook/assets/image%20%2886%29.png)
+
 ## 代码位置
 
 原代码位置：[ch18, Level1](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level1_Color_DNN.py)
@@ -307,23 +589,4 @@ $$
 
 * \*\*\*\*[**ColorClassification-DNN**](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level1_Color_DNN.py)\*\*\*\*
 * \*\*\*\*[**ColorClassification-CNN**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/ColorClassification-CNN.py)\*\*\*\*
-
-## keras实现
-
-### DNN
-
-
-
-
-
-### CNN
-
-
-
-## 思考与练习
-
-1. 从彩色图转换成灰度图会损失一些信息，有可能会导致DNN准确度不高。请尝试用2352\(=784x3\)的矢量做为样本特征值，送入DNN进行训练。
-2. 从结果上看细线和大色块对DNN的影响较大，请尝试去掉细线样本，看看DNN的准确度是否可以提高。
-3. 读者可以尝试使用4个以上的1x1卷积核，看看是否能提高准确度。
-4. 读者可以尝试不使用第二层卷积，看看是否能完成任务。
 
