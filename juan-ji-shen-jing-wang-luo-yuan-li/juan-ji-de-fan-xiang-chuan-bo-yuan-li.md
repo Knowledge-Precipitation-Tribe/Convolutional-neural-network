@@ -380,5 +380,5 @@ y allclose: True
 
 原代码位置：[ch17, Level3](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch17-CNNBasic/Level3_BackwardTrial.py)
 
-个人代码：
+个人代码：[**BackwardTrial**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/BackwardTrial.py)\*\*\*\*
 

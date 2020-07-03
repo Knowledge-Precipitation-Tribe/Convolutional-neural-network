@@ -301,11 +301,22 @@ $$
 
 ## 代码位置
 
-原代码位置：ch18, Level1
+原代码位置：[ch18, Level1](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level1_Color_DNN.py)
 
 个人代码：
 
+* \*\*\*\*[**ColorClassification-DNN**](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level1_Color_DNN.py)\*\*\*\*
+* \*\*\*\*[**ColorClassification-CNN**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/ColorClassification-CNN.py)\*\*\*\*
+
 ## keras实现
+
+### DNN
+
+
+
+
+
+### CNN
 
 
 

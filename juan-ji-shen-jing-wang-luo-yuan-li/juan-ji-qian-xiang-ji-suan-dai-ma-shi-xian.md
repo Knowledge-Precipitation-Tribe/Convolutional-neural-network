@@ -20,7 +20,7 @@ class ConvWeightsBias(WeightsBias_2_1):
 
 ![&#x56FE;17-19 &#x5377;&#x79EF;&#x6838;&#x7684;&#x7EC4;&#x6210;](../.gitbook/assets/image%20%2834%29.png)
 
-以图17-19为例，各个维度的数值如下：
+以图17-19为例，**各个维度的数值如下**：
 
 * FilterCount=2，第一维，过滤器数量，对应输出通道数。
 * KernalCount=3，第二维，卷积核数量，对应输入通道数。两个Filter里面的Kernal数必须相同。
