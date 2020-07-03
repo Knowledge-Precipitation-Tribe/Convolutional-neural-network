@@ -40,7 +40,9 @@
 * [解决MNIST分类问题](juan-ji-shen-jing-wang-luo-ying-yong/jie-jue-mnist-fen-lei-wen-ti.md)
 * [Fashion-MNIST分类](juan-ji-shen-jing-wang-luo-ying-yong/fashionmnist-fen-lei.md)
 * [Cifar-10分类-CNN](juan-ji-shen-jing-wang-luo-ying-yong/cifar10-fen-lei-cnn.md)
-* [Cifar-10分类-ResNet](juan-ji-shen-jing-wang-luo-ying-yong/cifar10-fen-lei-resnet.md)
+* [Cifar-10分类-ResNet-v1](juan-ji-shen-jing-wang-luo-ying-yong/cifar10-fen-lei-resnet.md)
+* [Cifar-10分类-ResNet-v2](juan-ji-shen-jing-wang-luo-ying-yong/cifar10-fen-lei-resnetv2.md)
+* [Cifar-10分类-ResNet50](juan-ji-shen-jing-wang-luo-ying-yong/cifar10-fen-lei-resnet50.md)
 
 ---
 

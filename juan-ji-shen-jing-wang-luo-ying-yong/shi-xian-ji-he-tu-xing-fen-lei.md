@@ -294,11 +294,11 @@ test loss: 0.45858695793151855, test accuracy: 0.8640000224113464
 
 #### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2883%29.png)
+![](../.gitbook/assets/image%20%2884%29.png)
 
 #### 分类结果
 
-![](../.gitbook/assets/image%20%2895%29.png)
+![](../.gitbook/assets/image%20%28100%29.png)
 
 ### CNN
 
@@ -456,11 +456,11 @@ test loss: 0.1311654432117939, test accuracy: 0.9549999833106995
 
 #### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%28100%29.png)
+![](../.gitbook/assets/image%20%28107%29.png)
 
 #### 分类结果
 
-![](../.gitbook/assets/image%20%2888%29.png)
+![](../.gitbook/assets/image%20%2890%29.png)
 
 ## 代码位置
 

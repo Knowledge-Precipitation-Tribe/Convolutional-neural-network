@@ -251,11 +251,11 @@ test loss: 0.3737159375786781, test accuracy: 0.8648999929428101
 
 ### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2897%29.png)
+![](../.gitbook/assets/image%20%28103%29.png)
 
 ### 分类结果
 
-![](../.gitbook/assets/image%20%2889%29.png)
+![](../.gitbook/assets/image%20%2892%29.png)
 
 ## keras-CNN实现
 
@@ -380,7 +380,7 @@ if __name__ == '__main__':
 
 ### 模型结构
 
-![](../.gitbook/assets/image%20%28105%29.png)
+![](../.gitbook/assets/image%20%28113%29.png)
 
 ### 模型输出
 
@@ -415,11 +415,11 @@ test loss: 0.28777108699083326, test accuracy: 0.8909000158309937
 
 ### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2881%29.png)
+![](../.gitbook/assets/image%20%2882%29.png)
 
 ### 分类结果
 
-![](../.gitbook/assets/image%20%2898%29.png)
+![](../.gitbook/assets/image%20%28104%29.png)
 
 ## 代码位置
 

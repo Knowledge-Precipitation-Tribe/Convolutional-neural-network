@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
 ### 模型结构
 
-![](../.gitbook/assets/image%20%28104%29.png)
+![](../.gitbook/assets/image%20%28112%29.png)
 
 ### 模型输出
 
@@ -307,11 +307,11 @@ test loss: 0.06329172231366392, test accuracy: 0.9783999919891357
 
 ### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%28102%29.png)
+![](../.gitbook/assets/image%20%28109%29.png)
 
 ### 分类结果
 
-![](../.gitbook/assets/image%20%2891%29.png)
+![](../.gitbook/assets/image%20%2894%29.png)
 
 ## 代码位置
 

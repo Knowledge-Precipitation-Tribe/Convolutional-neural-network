@@ -1,4 +1,4 @@
-# Cifar-10分类-CNN
+# Cifar-10分类-ResNet50
 
 Cifar 是加拿大政府牵头投资的一个先进科学项目研究所。Hinton、Bengio和他的学生在2004年拿到了 Cifar 投资的少量资金，建立了神经计算和自适应感知项目。这个项目结集了不少计算机科学家、生物学家、电气工程师、神经科学家、物理学家、心理学家，加速推动了 Deep Learning 的进程。从这个阵容来看，DL 已经和 ML 系的数据挖掘分的很远了。Deep Learning 强调的是自适应感知和人工智能，是计算机与神经科学交叉；Data Mining 强调的是高速、大数据、统计数学分析，是计算机和数学的交叉。
 
@@ -38,7 +38,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 from keras.utils import to_categorical
 from keras.models import Sequential, load_model
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input, Activation, add, BatchNormalization, AveragePooling2D
+from keras.applications import ResNet50
+from keras.regularizers import l2
 
 names = ["airplane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 
@@ -121,24 +123,9 @@ def show_result(x, y, y_raw):
 
 
 def build_model():
-    model = Sequential()
-    model.add(Conv2D(filters=32, kernel_size=(3,3),padding='same' ,activation='relu', input_shape=(32, 32, 3)))
-    model.add(Conv2D(filters=32, kernel_size=(3,3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(filters=64, kernel_size=(3,3), padding='same', activation='relu'))
-    model.add(Conv2D(filters=64, kernel_size=(3,3), padding='same', activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.25))
-
-    model.add(Flatten())
-    model.add(Dense(512, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(10, activation='softmax'))
-
-    model.compile(optimizer = 'rmsprop',
-                  loss ='categorical_crossentropy',
+    model = ResNet50(weights=None, classes=10, input_shape=(32,32,3))
+    model.compile(optimizer='rmsprop',
+                  loss='categorical_crossentropy',
                   metrics=['accuracy'])
     return model
 
@@ -154,7 +141,8 @@ if __name__ == "__main__":
     print(x_test.shape)
     print(y_test.shape)
 
-    model_path = "cifar/cifar_model_cnn.h5"
+    model_path = "cifar/cifar_model_resnet50.h5"
+
 
     if os.path.exists(model_path):
         model = load_model(model_path)
@@ -162,7 +150,7 @@ if __name__ == "__main__":
         model = build_model()
         history = model.fit(x_train, y_train,
                             batch_size=64,
-                            epochs=10,
+                            epochs=1,
                             validation_split=0.2)
         model.save(model_path)
         draw_train_history(history)
@@ -176,31 +164,23 @@ if __name__ == "__main__":
 
 ### 模型结构
 
-为什么每一个梯队都要接一个DropOut层呢？因为这个网络结果设计已经比较复杂了，对于这个问题来说很可能会过拟合，所以要避免过拟合。如果简化网络结构，又可能会造成训练时间过长而不收敛。
-
-![](../.gitbook/assets/image%20%28106%29.png)
+![](../.gitbook/assets/image%20%2887%29.png)
 
 ### 模型输出
 
 ```python
-test loss: 0.722098091506958, test accuracy: 0.7603999972343445
+test loss: 1.512419725227356, test accuracy: 0.6747
 ```
 
 ### 模型损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2889%29.png)
+![](../.gitbook/assets/image%20%28105%29.png)
 
 ### 分类结果
 
-![](../.gitbook/assets/image%20%28108%29.png)
+![](../.gitbook/assets/image%20%2897%29.png)
 
 ## 代码位置
 
-**原代码位置：**[**Level6\_Cifar10.py** ](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level6_Cifar10.py)
-
-**个人代码：**[**Cifar10-CNN-keras**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Cifar10-CNN-keras.py)\*\*\*\*
-
-## 参考资料
-
-\[1\] 参考 [https://keras.io/examples/cifar10\_cnn/](https://keras.io/examples/cifar10_cnn/)
+\*\*\*\*[**Cifar10-Resnet50-keras**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Cifar10-Resnet50-keras.py)\*\*\*\*
 

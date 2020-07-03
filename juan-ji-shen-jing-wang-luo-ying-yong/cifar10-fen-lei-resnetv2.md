@@ -1,4 +1,4 @@
-# Cifar-10分类-ResNet-v1
+# Cifar-10分类-ResNet-v2
 
 Cifar 是加拿大政府牵头投资的一个先进科学项目研究所。Hinton、Bengio和他的学生在2004年拿到了 Cifar 投资的少量资金，建立了神经计算和自适应感知项目。这个项目结集了不少计算机科学家、生物学家、电气工程师、神经科学家、物理学家、心理学家，加速推动了 Deep Learning 的进程。从这个阵容来看，DL 已经和 ML 系的数据挖掘分的很远了。Deep Learning 强调的是自适应感知和人工智能，是计算机与神经科学交叉；Data Mining 强调的是高速、大数据、统计数学分析，是计算机和数学的交叉。
 
@@ -167,72 +167,93 @@ def resnet_layer(inputs,
     return x
 
 def build_model(input_shape, depth, num_classes=10):
-    """ResNet 版本 1 模型构建器 [a]
+    """ResNet 版本 2 模型构建器 [b]
 
-        2 x (3 x 3) Conv2D-BN-ReLU 的堆栈
-        最后一个 ReLU 在快捷连接之后。
-        在每个阶段的开始，特征图大小由具有 strides=2 的卷积层减半（下采样），
-        而滤波器的数量加倍。在每个阶段中，这些层具有相同数量的过滤器和相同的特征图尺寸。
-        特征图尺寸:
-        stage 0: 32x32, 16
-        stage 1: 16x16, 32
-        stage 2:  8x8,  64
-        参数数量与 [a] 中表 6 接近:
-        ResNet20 0.27M
-        ResNet32 0.46M
-        ResNet44 0.66M
-        ResNet56 0.85M
-        ResNet110 1.7M
+    (1 x 1)-(3 x 3)-(1 x 1) BN-ReLU-Conv2D 的堆栈，也被称为瓶颈层。
+    每一层的第一个快捷连接是一个 1 x 1 Conv2D。
+    第二个及以后的快捷连接是 identity。
+    在每个阶段的开始，特征图大小由具有 strides=2 的卷积层减半（下采样），
+    而滤波器的数量加倍。在每个阶段中，这些层具有相同数量的过滤器和相同的特征图尺寸。
+    特征图尺寸:
+    conv1  : 32x32,  16
+    stage 0: 32x32,  64
+    stage 1: 16x16, 128
+    stage 2:  8x8,  256
 
-        # 参数
-            input_shape (tensor): 输入图像张量的尺寸
-            depth (int): 核心卷积层的数量
-            num_classes (int): 类别数 (CIFAR10 为 10)
+    # 参数
+        input_shape (tensor): 输入图像张量的尺寸
+        depth (int): 核心卷积层的数量
+        num_classes (int): 类别数 (CIFAR10 为 10)
 
-        # 返回
-            model (Model): Keras 模型实例
-        """
-    if (depth - 2) % 6 != 0:
-        raise ValueError('depth should be 6n+2 (eg 20, 32, 44 in [a])')
-    # 开始模型定义
-    num_filters = 16
-    num_res_blocks = int((depth - 2) / 6)
+    # 返回
+        model (Model): Keras 模型实例
+    """
+    if (depth - 2) % 9 != 0:
+        raise ValueError('depth should be 9n+2 (eg 56 or 110 in [b])')
+    # 开始模型定义。
+    num_filters_in = 16
+    num_res_blocks = int((depth - 2) / 9)
 
     inputs = Input(shape=input_shape)
-    x = resnet_layer(inputs=inputs)
-    # 实例化残差单元的堆栈
-    for stack in range(3):
+    # v2 在将输入分离为两个路径前执行带 BN-ReLU 的 Conv2D 操作。
+    x = resnet_layer(inputs=inputs,
+                     num_filters=num_filters_in,
+                     conv_first=True)
+
+    # 实例化残差单元的栈
+    for stage in range(3):
         for res_block in range(num_res_blocks):
+            activation = 'relu'
+            batch_normalization = True
             strides = 1
-            if stack > 0 and res_block == 0:  # 第一层但不是第一个栈
-                strides = 2  # downsample
+            if stage == 0:
+                num_filters_out = num_filters_in * 4
+                if res_block == 0:  # first layer and first stage
+                    activation = None
+                    batch_normalization = False
+            else:
+                num_filters_out = num_filters_in * 2
+                if res_block == 0:  # first layer but not first stage
+                    strides = 2    # downsample
+
+            # 瓶颈残差单元
             y = resnet_layer(inputs=x,
-                             num_filters=num_filters,
-                             strides=strides)
+                             num_filters=num_filters_in,
+                             kernel_size=1,
+                             strides=strides,
+                             activation=activation,
+                             batch_normalization=batch_normalization,
+                             conv_first=False)
             y = resnet_layer(inputs=y,
-                             num_filters=num_filters,
-                             activation=None)
-            if stack > 0 and res_block == 0:  # first layer but not first stack
+                             num_filters=num_filters_in,
+                             conv_first=False)
+            y = resnet_layer(inputs=y,
+                             num_filters=num_filters_out,
+                             kernel_size=1,
+                             conv_first=False)
+            if res_block == 0:
                 # 线性投影残差快捷键连接，以匹配更改的 dims
                 x = resnet_layer(inputs=x,
-                                 num_filters=num_filters,
+                                 num_filters=num_filters_out,
                                  kernel_size=1,
                                  strides=strides,
                                  activation=None,
                                  batch_normalization=False)
             x = add([x, y])
-            x = Activation('relu')(x)
-        num_filters *= 2
 
-    # 在顶层加分类器。
-    # v1 不在最后一个快捷连接 ReLU 后使用 BN
+        num_filters_in = num_filters_out
+
+    # 在顶层添加分类器
+    # v2 has BN-ReLU before Pooling
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
     x = AveragePooling2D(pool_size=8)(x)
     y = Flatten()(x)
     outputs = Dense(num_classes,
                     activation='softmax',
                     kernel_initializer='he_normal')(y)
 
-    # 实例化模型
+    # 实例化模型。
     model = Model(inputs=inputs, outputs=outputs)
     model.compile(optimizer='rmsprop',
                   loss='categorical_crossentropy',
@@ -251,9 +272,9 @@ if __name__ == "__main__":
     print(x_test.shape)
     print(y_test.shape)
 
-    model_path = "cifar/cifar_model_resnet.h5"
+    model_path = "cifar/cifar_model_resnet_v2.h5"
 
-    depth = 3 * 6 + 2
+    depth = 3 * 9 + 2
     input_shape = (32,32,3)
 
     if os.path.exists(model_path):
@@ -262,7 +283,7 @@ if __name__ == "__main__":
         model = build_model(input_shape=input_shape, depth=depth)
         history = model.fit(x_train, y_train,
                             batch_size=64,
-                            epochs=1,
+                            epochs=10,
                             validation_split=0.2)
         model.save(model_path)
         draw_train_history(history)
@@ -276,27 +297,27 @@ if __name__ == "__main__":
 
 ### 模型结构
 
-![](../.gitbook/assets/image%20%28111%29.png)
+![](../.gitbook/assets/image%20%2881%29.png)
 
 ### 模型输出
 
 ```python
-test loss: 1.2773868394851684, test accuracy: 0.7052000164985657
+test loss: 1.5088062532424926, test accuracy: 0.7302
 ```
 
 ### 模型损失以及准确率曲线
 
-可以看到虽然只训练了十个epoch，但是模型后面已经过拟合了。
+可以看到虽然只训练了二十个epoch，但是模型后面已经过拟合了。
 
-![](../.gitbook/assets/image%20%2898%29.png)
+![](../.gitbook/assets/image%20%28105%29.png)
 
 ### 分类结果
 
-![](../.gitbook/assets/image%20%2891%29.png)
+![](../.gitbook/assets/image%20%28101%29.png)
 
 ## 代码位置
 
-\*\*\*\*[**Cifar10-ResNet-v1-keras**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Cifar10-ResNet-v1-keras.py)\*\*\*\*
+\*\*\*\*[**Cifar10-ResNet-v2-keras**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Cifar10-ResNet-v2-keras.py)\*\*\*\*
 
 ## 参考资料
 
