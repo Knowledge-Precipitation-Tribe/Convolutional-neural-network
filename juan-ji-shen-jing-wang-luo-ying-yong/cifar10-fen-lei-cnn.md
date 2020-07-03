@@ -40,6 +40,8 @@ from keras.utils import to_categorical
 from keras.models import Sequential, load_model
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 
+names = ["airplane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+
 def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
@@ -57,25 +59,6 @@ def load_train_data(data_path):
     return x_train, y_train
 
 
-def draw_img(data):
-    """
-    显示前60张图片
-    :param data:
-    :return:
-    """
-    fig, axes = plt.subplots(nrows=3, ncols=20, sharex=True, sharey=True, figsize=(80, 12))
-    imgs = data[:60]
-
-    for image, row in zip([imgs[:20], imgs[20:40], imgs[40:60]], axes):
-        for img, ax in zip(image, row):
-            ax.imshow(img)
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-
-    fig.tight_layout(pad=0.1)
-    plt.show()
-
-
 def process_train_data(x_train, y_train):
     minmax = MinMaxScaler()
     x_train_rows = x_train.reshape(x_train.shape[0], 32 * 32 * 3)
@@ -84,6 +67,22 @@ def process_train_data(x_train, y_train):
 
     y_train = to_categorical(y_train)
     return x_train, y_train
+
+
+def load_test_data(data_path):
+    batch = unpickle(data_path + '/test_batch')
+    x_test = batch[b'data'].reshape((len(batch[b'data']), 3, 32, 32)).transpose(0, 2, 3, 1)
+    y_test = batch[b'labels']
+    return x_test, y_test
+
+def process_test_data(x_test, y_test):
+    minmax = MinMaxScaler()
+    x_test_rows = x_test.reshape(x_test.shape[0], 32 * 32 * 3)
+    x_test = minmax.fit_transform(x_test_rows)
+    x_test = x_test.reshape(x_test.shape[0], 32, 32, 3)
+
+    y_test = to_categorical(y_test)
+    return x_test, y_test
 
 
 def draw_train_history(history):
@@ -108,60 +107,98 @@ def draw_train_history(history):
     plt.legend(['train', 'validation'], loc='upper left')
     plt.show()
 
+def show_result(x, y, y_raw):
+    fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
+    for i in range(64):
+        ax[i // 8, i % 8].imshow(x[i])
+        if y[i] == y_raw[i]:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]])
+        else:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]]+ "(" + names[y[i]] + ")", fontdict={'color':'r'})
+        ax[i // 8, i % 8].axis('off')
+    # endfor
+    plt.show()
+
+
 def build_model():
     model = Sequential()
-    model.add(Conv2D(filters=16, kernel_size=2, padding='same', activation='relu', input_shape=(32, 32, 3)))
-    model.add(MaxPooling2D(pool_size=2))
+    model.add(Conv2D(filters=32, kernel_size=(3,3),padding='same' ,activation='relu', input_shape=(32, 32, 3)))
+    model.add(Conv2D(filters=32, kernel_size=(3,3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.25))
 
-    model.add(Conv2D(filters=32, kernel_size=2, padding='same', activation='relu'))
-    model.add(MaxPooling2D(pool_size=2))
-
-    model.add(Conv2D(filters=64, kernel_size=2, padding='same', activation='relu'))
-    model.add(MaxPooling2D(pool_size=2))
-    model.add(Dropout(0.3))
+    model.add(Conv2D(filters=64, kernel_size=(3,3), padding='same', activation='relu'))
+    model.add(Conv2D(filters=64, kernel_size=(3,3), padding='same', activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.25))
 
     model.add(Flatten())
-    model.add(Dense(500, activation='relu'))
-    model.add(Dropout(0.4))
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.5))
     model.add(Dense(10, activation='softmax'))
 
-    model.compile(optimizer = 'rmsprop', loss ='categorical_crossentropy',metrics=['accuracy'])
+    model.compile(optimizer = 'rmsprop',
+                  loss ='categorical_crossentropy',
+                  metrics=['accuracy'])
     return model
-
-def load_test_data(data_path):
-    batch = unpickle(data_path + '/test_batch' + str(1))
-    print(batch)
-    x_test = batch[b'data'].reshape((len(batch[b'data']), 3, 32, 32)).transpose(0, 2, 3, 1)
-    return x_test
 
 
 if __name__ == "__main__":
-    x_train, y_train = load_train_data('data')
+    x_train, y_train = load_train_data('../data/cifar')
     x_train, y_train = process_train_data(x_train, y_train)
-    model_path = "cifar_model.h5"
+
+    x_test, y_test = load_test_data('../data/cifar')
+    x_test, y_test = process_train_data(x_test, y_test)
+    print(x_train.shape)
+    print(y_train.shape)
+    print(x_test.shape)
+    print(y_test.shape)
+
+    model_path = "cifar/cifar_model_cnn.h5"
+
     if os.path.exists(model_path):
         model = load_model(model_path)
     else:
         model = build_model()
-        history = model.fit(x_train, y_train, batch_size=64, epochs=10, validation_split=0.2)
+        history = model.fit(x_train, y_train,
+                            batch_size=64,
+                            epochs=10,
+                            validation_split=0.2)
+        model.save(model_path)
         draw_train_history(history)
+
+    loss, accuracy = model.evaluate(x_test, y_test)
+    print("test loss: {}, test accuracy: {}".format(loss, accuracy))
+
+    z = model.predict(x_test[0:64])
+    show_result(x_test[0:64], np.argmax(z, axis=1), np.argmax(y_test, axis=1))
 ```
 
 ### 模型结构
 
+为什么每一个梯队都要接一个DropOut层呢？因为这个网络结果设计已经比较复杂了，对于这个问题来说很可能会过拟合，所以要避免过拟合。如果简化网络结构，又可能会造成训练时间过长而不收敛。
 
+![](../.gitbook/assets/image%20%2899%29.png)
 
 ### 模型输出
 
-
+```python
+test loss: 0.722098091506958, test accuracy: 0.7603999972343445
+```
 
 ### 模型损失以及准确率曲线
 
+![](../.gitbook/assets/image%20%2887%29.png)
 
+### 分类结果
+
+![](../.gitbook/assets/image%20%28101%29.png)
 
 ## 代码位置
 
-\*\*\*\*[**Cifar10-CNN-keras**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Cifar10-CNN-keras.py)\*\*\*\*
+**原代码位置：**[**Level6\_Cifar10.py** ](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level6_Cifar10.py)
+
+**个人代码：**[**Cifar10-CNN-keras**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/Cifar10-CNN-keras.py)\*\*\*\*
 
 ## 参考资料
 

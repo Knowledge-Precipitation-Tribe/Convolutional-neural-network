@@ -415,11 +415,11 @@ test loss: 0.9397198047637939, test accuracy: 0.7200000286102295
 
 #### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2889%29.png)
+![](../.gitbook/assets/image%20%28103%29.png)
 
 #### 模型分类结果
 
-![](../.gitbook/assets/image%20%2883%29.png)
+![](../.gitbook/assets/image%20%2885%29.png)
 
 ### CNN
 
@@ -540,7 +540,7 @@ if __name__ == '__main__':
 
 #### 模型结构
 
-![](../.gitbook/assets/image%20%2884%29.png)
+![](../.gitbook/assets/image%20%2886%29.png)
 
 #### 模型输出
 
@@ -575,11 +575,11 @@ test loss: 0.013688366492278874, test accuracy: 0.996999979019165
 
 #### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2881%29.png)
+![](../.gitbook/assets/image%20%2882%29.png)
 
 #### 模型分类结果
 
-![](../.gitbook/assets/image%20%2886%29.png)
+![](../.gitbook/assets/image%20%2890%29.png)
 
 ## 代码位置
 

@@ -123,17 +123,310 @@ def cnn_model():
 
 与前馈神经网络方案相比，这32个样本里只有一个错误，第4行最后一列，把第9类“短靴”预测成了“凉鞋”，因为这个样本中间有一个三角形的黑色块，与凉鞋的镂空设计很像。
 
+## keras-DNN实现
+
+```python
+from ExtendedDataReader.MnistImageDataReader import *
+
+from keras.models import Sequential
+from keras.layers import Dense, BatchNormalization
+
+import matplotlib.pyplot as plt
+
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+train_x = '../data/FashionMnistTrainX'
+train_y = '../data/FashionMnistTrainY'
+test_x = '../data/FashionMnistTestX'
+test_y = '../data/FashionMnistTestY'
+
+# 0-T恤 1-裤子 2-套衫 3-连衣裙 4-外套 5-凉鞋 6-衬衫 7-运动鞋 8-包 9-短靴
+names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
+
+
+def load_data(mode):
+    print("reading data...")
+    dataReader = MnistImageDataReader(train_x, train_y, test_x, test_y, mode)
+    dataReader.ReadData()
+    dataReader.NormalizeX()
+    dataReader.NormalizeY(NetType.MultipleClassifier, base=0)
+    dataReader.Shuffle()
+    dataReader.GenerateValidationSet(k=10)
+    return dataReader
+
+def data_process(dataReader):
+    x_train, y_train = dataReader.XTrain, dataReader.YTrain
+    x_test, y_test = dataReader.XTest, dataReader.YTest
+    x_val, y_val = dataReader.XDev, dataReader.YDev
+
+    x_train = x_train.reshape(-1, 784)
+    x_test = x_test.reshape(-1, 784)
+    x_val = x_val.reshape(-1, 784)
+
+    x_test_raw = dataReader.XTestRaw[0:64]
+    y_test_raw = dataReader.YTestRaw[0:64]
+
+    return x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw
+
+def build_model():
+    model = Sequential()
+    model.add(Dense(128, activation='relu', input_shape=(784, )))
+    model.add(BatchNormalization())
+    model.add(Dense(64, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dense(10, activation='softmax'))
+    model.compile(optimizer='Adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
+
+#画出训练过程中训练和验证的精度与损失
+def draw_train_history(history):
+    plt.figure(1)
+
+    # summarize history for accuracy
+    plt.subplot(211)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+
+    # summarize history for loss
+    plt.subplot(212)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+    plt.show()
+
+
+def show_result(x, y, y_raw):
+    x = x / 255
+    fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
+    for i in range(64):
+        ax[i // 8, i % 8].imshow(x[i].transpose(1, 2, 0).squeeze())
+        if y[i] == y_raw[i]:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]])
+        else:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]] + "(" + names[y[i]] + ")", fontdict={'color':'r'})
+        ax[i // 8, i % 8].axis('off')
+    # endfor
+    plt.show()
+
+
+if __name__ == '__main__':
+    dataReader = load_data("vector")
+    x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw = data_process(dataReader)
+    print(x_train.shape)
+    print(x_test.shape)
+    print(x_val.shape)
+
+    model = build_model()
+    history = model.fit(x_train, y_train,
+                        epochs=5,
+                        batch_size=64,
+                        validation_data=(x_val, y_val))
+    draw_train_history(history)
+
+    loss, accuracy = model.evaluate(x_test, y_test)
+    print("test loss: {}, test accuracy: {}".format(loss, accuracy))
+
+    z = model.predict(x_test[0:64])
+    show_result(x_test_raw[0:64], np.argmax(y_test, axis=1), np.argmax(z, axis=1))
+
+    weights = model.get_weights()
+    print("weights: ", weights)
+```
+
+### 模型输出
+
+```python
+test loss: 0.3737159375786781, test accuracy: 0.8648999929428101
+```
+
+### 训练损失以及准确率曲线
+
+![](../.gitbook/assets/image%20%2897%29.png)
+
+### 分类结果
+
+![](../.gitbook/assets/image%20%2889%29.png)
+
+## keras-CNN实现
+
+```python
+from keras.models import Sequential
+from keras.layers import Conv2D,MaxPool2D,Flatten,Dense, BatchNormalization
+
+import matplotlib.pyplot as plt
+
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+from ExtendedDataReader.MnistImageDataReader import *
+
+train_x = '../data/FashionMnistTrainX'
+train_y = '../data/FashionMnistTrainY'
+test_x = '../data/FashionMnistTestX'
+test_y = '../data/FashionMnistTestY'
+
+# 0-T恤 1-裤子 2-套衫 3-连衣裙 4-外套 5-凉鞋 6-衬衫 7-运动鞋 8-包 9-短靴
+names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
+
+
+def load_data(mode):
+    print("reading data...")
+    dataReader = MnistImageDataReader(train_x, train_y, test_x, test_y, mode)
+    dataReader.ReadData()
+    dataReader.NormalizeX()
+    dataReader.NormalizeY(NetType.MultipleClassifier, base=0)
+    dataReader.Shuffle()
+    dataReader.GenerateValidationSet(k=12)
+    x_train, y_train = dataReader.XTrain, dataReader.YTrain
+    x_test, y_test = dataReader.XTest, dataReader.YTest
+    x_val, y_val = dataReader.XDev, dataReader.YDev
+
+    x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+    x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
+    x_val = x_val.reshape(x_val.shape[0], 28, 28, 1)
+
+    x_test_raw = dataReader.XTestRaw[0:64]
+    y_test_raw = dataReader.YTestRaw[0:64]
+
+    return x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw
+
+def build_model():
+    model = Sequential()
+    model.add(Conv2D(filters=32, kernel_size=(3,3), activation='relu', input_shape=(28,28,1)))
+    model.add(MaxPool2D(pool_size=(2,2), strides=2))
+    model.add(Conv2D(filters=16, kernel_size=(3,3), activation='relu'))
+    model.add(MaxPool2D(pool_size=(2,2), strides=2))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dense(10, activation='softmax'))
+    model.compile(optimizer='Adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
+
+#画出训练过程中训练和验证的精度与损失
+def draw_train_history(history):
+    plt.figure(1)
+
+    # summarize history for accuracy
+    plt.subplot(211)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+
+    # summarize history for loss
+    plt.subplot(212)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'])
+    plt.show()
+
+
+def show_result(x, y, y_raw):
+    x = x / 255
+    fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
+    for i in range(64):
+        ax[i // 8, i % 8].imshow(x[i].transpose(1, 2, 0).squeeze())
+        if y[i] == y_raw[i]:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]])
+        else:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]] + "(" + names[y[i]] + ")", fontdict={'color':'r'})
+        ax[i // 8, i % 8].axis('off')
+    # endfor
+    plt.show()
+
+
+if __name__ == '__main__':
+    x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw = load_data("image")
+    print(x_train.shape)
+    print(x_test.shape)
+    print(x_val.shape)
+
+    model = build_model()
+    print(model.summary())
+    model.save('fashion_mnist_cnn/keras-model.h5')
+    history = model.fit(x_train, y_train,
+                        epochs=5,
+                        batch_size=64,
+                        validation_data=(x_val, y_val))
+    draw_train_history(history)
+
+    loss, accuracy = model.evaluate(x_test, y_test)
+    print("test loss: {}, test accuracy: {}".format(loss, accuracy))
+
+    z = model.predict(x_test[0:64])
+    show_result(x_test_raw[0:64], np.argmax(y_test, axis=1), np.argmax(z, axis=1))
+
+    weights = model.get_weights()
+    print("weights: ", weights)
+```
+
+### 模型结构
+
+![](../.gitbook/assets/image%20%28105%29.png)
+
+### 模型输出
+
+```python
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_1 (Conv2D)            (None, 26, 26, 32)        320       
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 13, 13, 32)        0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 11, 11, 16)        4624      
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 5, 5, 16)          0         
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 400)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               51328     
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 128)               512       
+_________________________________________________________________
+dense_2 (Dense)              (None, 10)                1290      
+=================================================================
+Total params: 58,074
+Trainable params: 57,818
+Non-trainable params: 256
+_________________________________________________________________
+
+test loss: 0.28777108699083326, test accuracy: 0.8909000158309937
+```
+
+### 训练损失以及准确率曲线
+
+![](../.gitbook/assets/image%20%2881%29.png)
+
+### 分类结果
+
+![](../.gitbook/assets/image%20%2898%29.png)
+
 ## 代码位置
 
-原代码位置：ch18, Level5
+原代码位置：[ch18, Level5](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level5_FashionMnist_DNN.py)
 
 个人代码：
 
-## keras实现
-
-
-
-## 思考与练习
-
-1. 读者可以尝试增加此卷积神经网络模型的卷积层数，来提高准确度。
+* \*\*\*\*[**FashionMnist-DNN**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/FashionMnist-DNN.py)\*\*\*\*
+* \*\*\*\*[**FashionMnist-CNN**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/FashionMnist-CNN.py)\*\*\*\*
 

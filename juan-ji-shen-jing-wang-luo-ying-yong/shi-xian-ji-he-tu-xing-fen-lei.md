@@ -294,11 +294,11 @@ test loss: 0.45858695793151855, test accuracy: 0.8640000224113464
 
 #### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2882%29.png)
+![](../.gitbook/assets/image%20%2883%29.png)
 
 #### 分类结果
 
-![](../.gitbook/assets/image%20%2887%29.png)
+![](../.gitbook/assets/image%20%2895%29.png)
 
 ### CNN
 
@@ -456,15 +456,18 @@ test loss: 0.1311654432117939, test accuracy: 0.9549999833106995
 
 #### 训练损失以及准确率曲线
 
-![](../.gitbook/assets/image%20%2888%29.png)
+![](../.gitbook/assets/image%20%28100%29.png)
 
 #### 分类结果
 
-![](../.gitbook/assets/image%20%2885%29.png)
+![](../.gitbook/assets/image%20%2888%29.png)
 
 ## 代码位置
 
-原代码位置：ch18, Level2
+原代码位置：[ch18, Level2](https://github.com/microsoft/ai-edu/blob/master/A-%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B/A2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B/SourceCode/ch18-CNNModel/Level2_Shape_DNN.py)
 
 个人代码：
+
+* [**ShapeClassification-DNN**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/ShapeClassification-DNN.py)\*\*\*\*
+* \*\*\*\*[**ShapeClassification-CNN**](https://github.com/Knowledge-Precipitation-Tribe/Convolutional-neural-network/blob/master/code/ShapeClassification-CNN.py)\*\*\*\*
 
