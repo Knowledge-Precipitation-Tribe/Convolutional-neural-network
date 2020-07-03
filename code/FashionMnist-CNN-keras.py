@@ -118,7 +118,7 @@ if __name__ == '__main__':
     print("test loss: {}, test accuracy: {}".format(loss, accuracy))
 
     z = model.predict(x_test[0:64])
-    show_result(x_test_raw[0:64], np.argmax(y_test, axis=1), np.argmax(z, axis=1))
+    show_result(x_test_raw[0:64], np.argmax(z, axis=1), np.argmax(y_test, axis=1))
 
     weights = model.get_weights()
     print("weights: ", weights)

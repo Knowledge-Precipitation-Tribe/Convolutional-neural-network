@@ -18,6 +18,8 @@ from keras.utils import to_categorical
 from keras.models import Sequential, load_model
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 
+names = ["airplane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+
 def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
@@ -49,6 +51,7 @@ def load_test_data(data_path):
     batch = unpickle(data_path + '/test_batch')
     x_test = batch[b'data'].reshape((len(batch[b'data']), 3, 32, 32)).transpose(0, 2, 3, 1)
     y_test = batch[b'labels']
+    print(y_test)
     return x_test, y_test
 
 def process_test_data(x_test, y_test):
@@ -103,14 +106,13 @@ def draw_train_history(history):
     plt.show()
 
 def show_result(x, y, y_raw):
-    x = x / 255
     fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
     for i in range(64):
-        ax[i // 8, i % 8].imshow(x[i].transpose(1, 2, 0).squeeze())
-        if y[i, 0] == y_raw[i, 0]:
-            ax[i // 8, i % 8].set_title(y[i, 0])
+        ax[i // 8, i % 8].imshow(x[i])
+        if y[i] == y_raw[i]:
+            ax[i // 8, i % 8].set_title(names[y_raw[i]])
         else:
-            ax[i // 8, i % 8].set_title(y[i, 0], fontdict={'color':'r'})
+            ax[i // 8, i % 8].set_title(names[y_raw[i]]+ "(" + names[y[i]] + ")", fontdict={'color':'r'})
         ax[i // 8, i % 8].axis('off')
     # endfor
     plt.show()
@@ -151,26 +153,20 @@ if __name__ == "__main__":
     print(y_test.shape)
 
     model_path = "cifar/cifar_model_cnn.h5"
-    # if os.path.exists(model_path):
-    #     model = load_model(model_path)
-    # else:
-    #     model = build_model()
-    #     history = model.fit(x_train, y_train,
-    #                         batch_size=64,
-    #                         epochs=1,
-    #                         validation_split=0.2)
-    #     draw_train_history(history)
-    #     model.save(model_path)
-    model = build_model()
-    history = model.fit(x_train, y_train,
-                        batch_size=64,
-                        epochs=1,
-                        validation_split=0.2)
-    model.save(model_path)
-    draw_train_history(history)
+
+    if os.path.exists(model_path):
+        model = load_model(model_path)
+    else:
+        model = build_model()
+        history = model.fit(x_train, y_train,
+                            batch_size=64,
+                            epochs=10,
+                            validation_split=0.2)
+        model.save(model_path)
+        draw_train_history(history)
 
     loss, accuracy = model.evaluate(x_test, y_test)
     print("test loss: {}, test accuracy: {}".format(loss, accuracy))
 
-    # z = model.predict(x_test[0:64])
-    # show_result(x_test_raw[0:64], np.argmax(z, axis=1).reshape(64, 1), y_test_raw[0:64])
+    z = model.predict(x_test[0:64])
+    show_result(x_test[0:64], np.argmax(z, axis=1), np.argmax(y_test, axis=1))
