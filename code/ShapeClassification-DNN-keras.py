@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-#
 '''
-# Name:         ColorClassification-DNN-keras
+# Name:         ShapeClassification-DNN-keras
 # Description:  
 # Author:       super
 # Date:         2020/7/3
@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-train_data_name = "../data/ch17.train_color.npz"
-test_data_name = "../data/ch17.test_color.npz"
+train_data_name = "../data/ch17.train_shape.npz"
+test_data_name = "../data/ch17.test_shape.npz"
 
-name = ["red", "green", "blue", "yellow", "cyan", "pink"]
+name = ["circle", "rectangle", "triangle", "diamond", "line"]
 
 def load_data(mode):
     print("reading data...")
@@ -42,7 +42,7 @@ def build_model():
     model = Sequential()
     model.add(Dense(128, activation='relu', input_shape=(784, )))
     model.add(Dense(64, activation='relu'))
-    model.add(Dense(6, activation='softmax'))
+    model.add(Dense(5, activation='softmax'))
     model.compile(optimizer='Adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
@@ -72,16 +72,15 @@ def draw_train_history(history):
     plt.show()
 
 
-def show_result(x, y, y_raw):
-    x = x / 255
-    fig, ax = plt.subplots(nrows=8, ncols=8, figsize=(11, 11))
-    for i in range(64):
-        ax[i // 8, i % 8].imshow(x[i].transpose(1, 2, 0))
-        if y[i, 0] == y_raw[i, 0]:
-            ax[i // 8, i % 8].set_title(name[y[i, 0]])
+def show_result(x, y,y_raw):
+    fig, ax = plt.subplots(nrows=6, ncols=6, figsize=(9, 9))
+    for i in range(36):
+        ax[i // 6, i % 6].imshow(x[i, 0])
+        if np.argmax(y[i]) == np.argmax(y_raw[i]):
+            ax[i // 6, i % 6].set_title(name[np.argmax(y[i])])
         else:
-            ax[i // 8, i % 8].set_title(name[y[i, 0]], fontdict={'color':'r'})
-        ax[i // 8, i % 8].axis('off')
+            ax[i // 6, i % 6].set_title(name[np.argmax(y[i])], fontdict={'color':'r'})
+        ax[i // 6, i % 6].axis('off')
     # endfor
     plt.show()
 
@@ -102,8 +101,8 @@ if __name__ == '__main__':
     loss, accuracy = model.evaluate(x_test, y_test)
     print("test loss: {}, test accuracy: {}".format(loss, accuracy))
 
-    z = model.predict(x_test[0:64])
-    show_result(x_test_raw[0:64], np.argmax(z, axis=1).reshape(64, 1), y_test_raw[0:64])
+    z = model.predict(x_test[0:36])
+    show_result(x_test_raw[0:36], np.argmax(z, axis=1).reshape(36, 1), y_test_raw[0:36])
 
     weights = model.get_weights()
     print("weights: ", weights)
