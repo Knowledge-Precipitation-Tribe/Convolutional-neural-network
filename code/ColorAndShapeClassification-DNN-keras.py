@@ -30,6 +30,9 @@ def load_data(mode):
     dataReader.NormalizeY(NetType.MultipleClassifier, base=0)
     dataReader.Shuffle()
     dataReader.GenerateValidationSet(k=10)
+    return dataReader
+
+def data_process(dataReader):
     x_train, y_train = dataReader.XTrain, dataReader.YTrain
     x_test, y_test = dataReader.XTest, dataReader.YTest
     x_val, y_val = dataReader.XDev, dataReader.YDev
@@ -76,7 +79,7 @@ def draw_train_history(history):
 def show_result(x, y,y_raw):
     fig, ax = plt.subplots(nrows=6, ncols=6, figsize=(9, 9))
     for i in range(36):
-        ax[i // 6, i % 6].imshow(x[i, 0])
+        ax[i // 6, i % 6].imshow(x[i].transpose(1, 2, 0))
         if np.argmax(y[i]) == np.argmax(y_raw[i]):
             ax[i // 6, i % 6].set_title(name[np.argmax(y[i])])
         else:
@@ -87,7 +90,8 @@ def show_result(x, y,y_raw):
 
 
 if __name__ == '__main__':
-    x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw = load_data('vector')
+    dataReader = load_data('vector')
+    x_train, y_train, x_test, y_test, x_val, y_val, x_test_raw, y_test_raw = data_process(dataReader)
     print(x_train.shape)
     print(x_test.shape)
     print(x_val.shape)
@@ -102,8 +106,11 @@ if __name__ == '__main__':
     loss, accuracy = model.evaluate(x_test, y_test)
     print("test loss: {}, test accuracy: {}".format(loss, accuracy))
 
-    z = model.predict(x_test[0:36])
-    show_result(x_test_raw[0:36], np.argmax(z, axis=1).reshape(36, 1), y_test_raw[0:36])
+    X_test, Y_test = dataReader.GetTestSet()
+    Z = model.predict(X_test[0:36])
+    X = dataReader.XTestRaw[0:36] / 255
+    Y = Y_test[0:36]
+    show_result(X, Z, Y)
 
     weights = model.get_weights()
     print("weights: ", weights)

@@ -88,7 +88,7 @@ def show_samples(x, y, title):
 def show_result(x, y,y_raw, title):
     fig, ax = plt.subplots(nrows=6, ncols=6, figsize=(9, 9))
     for i in range(36):
-        ax[i // 6, i % 6].imshow(x[i, 0].transpose(1, 2, 0))
+        ax[i // 6, i % 6].imshow(x[i].transpose(1, 2, 0))
         if np.argmax(y[i]) == np.argmax([y_raw[i]]):
             ax[i // 6, i % 6].set_title(name[np.argmax(y[i])])
         else:
@@ -103,6 +103,8 @@ def train_cnn():
     dataReader = LoadData("image")
     net = cnn_model()
     x, y = dataReader.GetBatchTrainSamples(36, 0)
+    print(x.shape)
+    print(y.shape)
     show_samples(x, y, "sample")
     net.train(dataReader, checkpoint=0.5, need_test=True)
     net.ShowLossHistory(XCoordinate.Iteration)
@@ -110,6 +112,8 @@ def train_cnn():
     X = dataReader.XTest[0:36]
     Z = net.inference(X_test[0:36])
     Y = Y_test[0:36]
+    print(X.shape)
+    print(Y.shape)
     show_result(X, Z, Y, "cnn:predication")
 
 

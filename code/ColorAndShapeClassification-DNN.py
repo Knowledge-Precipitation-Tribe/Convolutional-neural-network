@@ -75,7 +75,7 @@ def show_samples(x, y, title):
 def show_result(x, y,y_raw, title):
     fig, ax = plt.subplots(nrows=6, ncols=6, figsize=(9, 9))
     for i in range(36):
-        ax[i // 6, i % 6].imshow(x[i, 0].transpose(1, 2, 0))
+        ax[i // 6, i % 6].imshow(x[i].transpose(1, 2, 0))
         if np.argmax(y[i]) == np.argmax([y_raw[i]]):
             ax[i // 6, i % 6].set_title(name[np.argmax(y[i])])
         else:
