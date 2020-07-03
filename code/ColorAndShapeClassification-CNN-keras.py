@@ -104,11 +104,11 @@ if __name__ == '__main__':
 
     model = build_model()
     print(model.summary())
-    model.save('color_shape_cnn/keras-model.h5')
     history = model.fit(x_train, y_train,
                         epochs=20,
                         batch_size=64,
                         validation_data=(x_val, y_val))
+    model.save('color_shape_cnn/keras-model.h5')
     draw_train_history(history)
 
     loss, accuracy = model.evaluate(x_test, y_test)
