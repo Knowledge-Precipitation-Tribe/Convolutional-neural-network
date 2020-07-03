@@ -51,7 +51,6 @@ def load_test_data(data_path):
     batch = unpickle(data_path + '/test_batch')
     x_test = batch[b'data'].reshape((len(batch[b'data']), 3, 32, 32)).transpose(0, 2, 3, 1)
     y_test = batch[b'labels']
-    print(y_test)
     return x_test, y_test
 
 def process_test_data(x_test, y_test):
@@ -62,25 +61,6 @@ def process_test_data(x_test, y_test):
 
     y_test = to_categorical(y_test)
     return x_test, y_test
-
-
-def draw_img(data):
-    """
-    显示前60张图片
-    :param data:
-    :return:
-    """
-    fig, axes = plt.subplots(nrows=3, ncols=20, sharex=True, sharey=True, figsize=(80, 12))
-    imgs = data[:60]
-
-    for image, row in zip([imgs[:20], imgs[20:40], imgs[40:60]], axes):
-        for img, ax in zip(image, row):
-            ax.imshow(img)
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-
-    fig.tight_layout(pad=0.1)
-    plt.show()
 
 
 def draw_train_history(history):
